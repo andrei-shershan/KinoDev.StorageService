@@ -1,4 +1,5 @@
 using System.Text;
+using Azure.Storage.Blobs.Models;
 using KinoDev.Shared.DtoModels.Orders;
 using KinoDev.Shared.DtoModels.Tickets;
 using KinoDev.Shared.Helpers;
@@ -19,6 +20,8 @@ namespace KinoDev.StorageService.WebApi.Models.Services
 
         private readonly DataSettings _dataSettings;
 
+        private readonly BlobStorageSettings _blobStorageSettings;
+
         private readonly MessageBrokerSettings _messageBrokerSettings;
 
         public FileService(
@@ -28,7 +31,8 @@ namespace KinoDev.StorageService.WebApi.Models.Services
             ILogger<FileService> logger,
             IMessageBrokerService messageBrokerService,
             IOptions<MessageBrokerSettings> messageBrokerSettings,
-            IOptions<DataSettings> dataSettings)
+            IOptions<DataSettings> dataSettings,
+            IOptions<BlobStorageSettings> blobStorageSettings)
         {
             _qrCodeService = qrCodeService;
             _pdfService = pdfService;
@@ -37,6 +41,7 @@ namespace KinoDev.StorageService.WebApi.Models.Services
             _messageBrokerService = messageBrokerService;
             _messageBrokerSettings = messageBrokerSettings?.Value ?? throw new ArgumentNullException(nameof(messageBrokerSettings));
             _dataSettings = dataSettings?.Value ?? throw new ArgumentNullException(nameof(dataSettings));
+            _blobStorageSettings = blobStorageSettings?.Value ?? throw new ArgumentNullException(nameof(blobStorageSettings));
         }
 
         public async Task GenerateAndUploadFileAsync(OrderSummary orderSummary, CancellationToken cancellationToken)
@@ -50,8 +55,7 @@ namespace KinoDev.StorageService.WebApi.Models.Services
             var hash = HashHelper.CalculateSha256Hash(orderSummary.Id.ToString(), string.Empty);
             var fileName = $"{hash}.pdf";
 
-            var uri = await _blobStorageService.Upload(pdf, fileName, "test", Azure.Storage.Blobs.Models.PublicAccessType.Blob);
-            var relativePath = uri.AbsolutePath.TrimStart('/');
+            var relativePath = await _blobStorageService.Upload(pdf, fileName, _blobStorageSettings.ContainerNames.Tickets, PublicAccessType.Blob);
 
             orderSummary.FileUrl = relativePath;
 
@@ -60,7 +64,12 @@ namespace KinoDev.StorageService.WebApi.Models.Services
                 _messageBrokerSettings.Topics.OrderFileCreated
                 );
 
-            _logger.LogInformation("File uploaded to blob storage: {FileUrl}", uri);
+            _logger.LogInformation("File uploaded to blob storage: {FileUrl}", relativePath);
+        }
+
+        public Task<string> UploadPublicFileAsync(byte[] bytes, string fileName, string containerName)
+        {
+            return _blobStorageService.Upload(bytes, fileName, containerName, PublicAccessType.Blob);
         }
 
         private string GetHtml(OrderSummary orderSummary, string qrCodeStringContent)
