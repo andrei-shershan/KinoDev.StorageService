@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using KinoDev.StorageService.WebApi.Models.Configurations;
@@ -14,7 +15,7 @@ namespace KinoDev.StorageService.WebApi.Services
             _blobStorageSettings = blobStorageSettings.Value;
         }
 
-        public async Task<Uri> Upload(byte[] bytes, string fileName, string containerName, PublicAccessType accessType = PublicAccessType.None)
+        public async Task<string> Upload(byte[] bytes, string fileName, string containerName, PublicAccessType accessType = PublicAccessType.None)
         {
             try
             {
@@ -30,7 +31,8 @@ namespace KinoDev.StorageService.WebApi.Services
                     await uploadBlob.UploadAsync(ms, overwrite: true);
                 }
 
-                return uploadBlob.Uri;
+                // Return related path without account storage name
+                return Regex.Replace(uploadBlob.Uri.AbsolutePath, @"^/[^/]+/", "");
             }
             catch (Exception ex)
             {
