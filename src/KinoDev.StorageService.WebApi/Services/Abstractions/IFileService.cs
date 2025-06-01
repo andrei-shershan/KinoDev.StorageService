@@ -1,7 +1,6 @@
-using Azure.Storage.Blobs.Models;
 using KinoDev.Shared.DtoModels.Orders;
 
-namespace KinoDev.StorageService.WebApi.Services
+namespace KinoDev.StorageService.WebApi.Services.Abstractions
 {
     public interface IFileService
     {

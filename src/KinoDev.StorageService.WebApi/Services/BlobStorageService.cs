@@ -2,6 +2,7 @@ using System.Text.RegularExpressions;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using KinoDev.StorageService.WebApi.Models.Configurations;
+using KinoDev.StorageService.WebApi.Services.Abstractions;
 using Microsoft.Extensions.Options;
 
 namespace KinoDev.StorageService.WebApi.Services
@@ -10,9 +11,15 @@ namespace KinoDev.StorageService.WebApi.Services
     {
         private readonly BlobStorageSettings _blobStorageSettings;
 
-        public BlobStorageService(IOptions<BlobStorageSettings> blobStorageSettings)
+        private readonly ILogger<BlobStorageService> _logger;
+
+        public BlobStorageService(
+            IOptions<BlobStorageSettings> blobStorageSettings,
+            ILogger<BlobStorageService> logger
+            )
         {
             _blobStorageSettings = blobStorageSettings.Value;
+            _logger = logger;
         }
 
         public async Task<string> Upload(byte[] bytes, string fileName, string containerName, PublicAccessType accessType = PublicAccessType.None)
@@ -22,10 +29,10 @@ namespace KinoDev.StorageService.WebApi.Services
                 var serviceClient = new BlobServiceClient(_blobStorageSettings.ConnectionString);
 
                 var containerClient = serviceClient.GetBlobContainerClient(containerName);
+
                 await containerClient.CreateIfNotExistsAsync(accessType);
 
                 var uploadBlob = containerClient.GetBlobClient(fileName);
-
                 using (MemoryStream ms = new MemoryStream(bytes))
                 {
                     await uploadBlob.UploadAsync(ms, overwrite: true);
@@ -36,6 +43,7 @@ namespace KinoDev.StorageService.WebApi.Services
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to upload file to Blob Storage. FileName: {FileName}, ContainerName: {ContainerName}", fileName, containerName);
                 return null;
             }
         }

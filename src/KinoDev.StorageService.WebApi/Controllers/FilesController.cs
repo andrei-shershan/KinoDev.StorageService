@@ -1,5 +1,6 @@
 using KinoDev.StorageService.WebApi.Models.Configurations;
-using KinoDev.StorageService.WebApi.Services;
+using KinoDev.StorageService.WebApi.Models.RequestModels;
+using KinoDev.StorageService.WebApi.Services.Abstractions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
@@ -7,7 +8,7 @@ namespace KinoDev.StorageService.WebApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-// Add autorization and other attributes as needed
+// TODO: Add autorization and other attributes 
 public class FilesController : ControllerBase
 {
     private readonly IFileService _fileService;
@@ -18,13 +19,6 @@ public class FilesController : ControllerBase
     {
         _fileService = fileService ?? throw new ArgumentNullException(nameof(fileService));
         _blobStorageSettings = blobStorageSettings?.Value ?? throw new ArgumentNullException(nameof(blobStorageSettings));
-    }
-
-    public class FileUploadRequest
-    {
-        public string FileName { get; set; }
-
-        public string Base64Contents { get; set; }
     }
 
     [HttpPost]
@@ -47,11 +41,5 @@ public class FilesController : ControllerBase
 
         var fileRelativePath = await _fileService.UploadPublicFileAsync(fileData, request.FileName, _blobStorageSettings.ContainerNames.PublicImages);
         return Ok(fileRelativePath);
-    }
-
-    [HttpGet("hello")]
-    public IActionResult Hello()
-    {
-        return Ok("Hello from FilesController!");
     }
 }

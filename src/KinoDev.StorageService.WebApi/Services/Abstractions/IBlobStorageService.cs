@@ -1,6 +1,6 @@
 using Azure.Storage.Blobs.Models;
 
-namespace KinoDev.StorageService.WebApi.Services
+namespace KinoDev.StorageService.WebApi.Services.Abstractions
 {
     public interface IBlobStorageService
     {

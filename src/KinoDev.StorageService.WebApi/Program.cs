@@ -3,6 +3,7 @@ using KinoDev.Shared.Services;
 using KinoDev.StorageService.WebApi.Models.Configurations;
 using KinoDev.StorageService.WebApi.Models.Services;
 using KinoDev.StorageService.WebApi.Services;
+using KinoDev.StorageService.WebApi.Services.Abstractions;
 
 namespace KinoDev.StorageService.WebApi
 {
@@ -66,6 +67,8 @@ namespace KinoDev.StorageService.WebApi
             // Register and configure HttpClient for PdfService
             builder.Services.AddHttpClient<PdfService>();
 
+            builder.Services.AddHealthChecks();
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -75,10 +78,13 @@ namespace KinoDev.StorageService.WebApi
                 app.UseSwaggerUI();
             }
 
-            // app.UseHttpsRedirection();
-
+            var disableHttpsRedirection = builder.Configuration.GetValue<bool>("DisableHttpsRedirection");
+            if (!disableHttpsRedirection)
+            {
+                app.UseHttpsRedirection();
+            }
+            
             app.UseAuthorization();
-
 
             app.MapControllers();
 
