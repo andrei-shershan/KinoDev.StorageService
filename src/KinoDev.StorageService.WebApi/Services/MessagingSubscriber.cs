@@ -2,6 +2,7 @@ using System.Text.Json;
 using KinoDev.Shared.DtoModels.Orders;
 using KinoDev.Shared.Services;
 using KinoDev.StorageService.WebApi.Models.Configurations;
+using KinoDev.StorageService.WebApi.Services.Abstractions;
 using Microsoft.Extensions.Options;
 
 namespace KinoDev.StorageService.WebApi.Services

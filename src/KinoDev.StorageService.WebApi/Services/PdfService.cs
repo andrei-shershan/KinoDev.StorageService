@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using System.Text;
 using KinoDev.StorageService.WebApi.Models.Configurations;
+using KinoDev.StorageService.WebApi.Services.Abstractions;
 using Microsoft.Extensions.Options;
 
 namespace KinoDev.StorageService.WebApi.Services

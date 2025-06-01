@@ -1,4 +1,4 @@
-namespace KinoDev.StorageService.WebApi.Services
+namespace KinoDev.StorageService.WebApi.Services.Abstractions
 {
     public interface IPdfService
     {

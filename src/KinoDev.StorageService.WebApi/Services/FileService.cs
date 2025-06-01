@@ -5,7 +5,7 @@ using KinoDev.Shared.DtoModels.Tickets;
 using KinoDev.Shared.Helpers;
 using KinoDev.Shared.Services;
 using KinoDev.StorageService.WebApi.Models.Configurations;
-using KinoDev.StorageService.WebApi.Services;
+using KinoDev.StorageService.WebApi.Services.Abstractions;
 using Microsoft.Extensions.Options;
 
 namespace KinoDev.StorageService.WebApi.Models.Services
@@ -74,16 +74,6 @@ namespace KinoDev.StorageService.WebApi.Models.Services
 
         private string GetHtml(OrderSummary orderSummary, string qrCodeStringContent)
         {
-            var getSeatsList = (IEnumerable<TickerSummary> ts) =>
-            {
-                var sb = new StringBuilder();
-                foreach (var ticket in ts)
-                {
-                    sb.AppendLine($"<li>Row: {ticket.Row}, Seat: {ticket.Number}</li>");
-                }
-
-                return sb.ToString();
-            };
             var html = $@"
                 <html>
                 <head>
@@ -99,7 +89,7 @@ namespace KinoDev.StorageService.WebApi.Models.Services
                     <h2>{orderSummary.ShowTimeSummary.Time.ToString("MMMM d, yyyy, HH:mm")}</h2>                    
                     </div>
                     <ul>
-                    {getSeatsList(orderSummary.Tickets)}
+                    {GetSeatsList(orderSummary.Tickets)}
                     </ul>
                     <br />
                     <img src=""data:image/png;base64,{qrCodeStringContent}"" alt=""QR Code"" width=""250"" />
@@ -113,6 +103,17 @@ namespace KinoDev.StorageService.WebApi.Models.Services
                 </html>";
 
             return html;
+        }
+
+        private string GetSeatsList(IEnumerable<TickerSummary> tickets)
+        {
+            var sb = new StringBuilder();
+            foreach (var ticket in tickets.OrderBy(t => t.Row).ThenBy(t => t.Number))
+            {
+                sb.AppendLine($"<li>Row: {ticket.Row}, Seat: {ticket.Number}</li>");
+            }
+
+            return sb.ToString();
         }
     }
 }
