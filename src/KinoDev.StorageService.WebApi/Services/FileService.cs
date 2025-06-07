@@ -1,9 +1,11 @@
 using System.Text;
+using System.Text.Json;
 using Azure.Storage.Blobs.Models;
 using KinoDev.Shared.DtoModels.Orders;
 using KinoDev.Shared.DtoModels.Tickets;
 using KinoDev.Shared.Helpers;
 using KinoDev.Shared.Services;
+using KinoDev.Shared.Services.Abstractions;
 using KinoDev.StorageService.WebApi.Models.Configurations;
 using KinoDev.StorageService.WebApi.Services.Abstractions;
 using Microsoft.Extensions.Options;
@@ -59,12 +61,10 @@ namespace KinoDev.StorageService.WebApi.Models.Services
 
             orderSummary.FileUrl = relativePath;
 
-            await _messageBrokerService.PublishAsync(
-                orderSummary,
-                _messageBrokerSettings.Topics.OrderFileCreated
-                );
-
-            _logger.LogInformation("File uploaded to blob storage: {FileUrl}", relativePath);
+            await _messageBrokerService.SendMessageAsync(
+                _messageBrokerSettings.Queues.OrderFileCreated,
+                orderSummary
+            );           
         }
 
         public Task<string> UploadPublicFileAsync(byte[] bytes, string fileName, string containerName)

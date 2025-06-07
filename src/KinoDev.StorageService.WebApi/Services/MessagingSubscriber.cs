@@ -1,6 +1,7 @@
 using System.Text.Json;
 using KinoDev.Shared.DtoModels.Orders;
 using KinoDev.Shared.Services;
+using KinoDev.Shared.Services.Abstractions;
 using KinoDev.StorageService.WebApi.Models.Configurations;
 using KinoDev.StorageService.WebApi.Services.Abstractions;
 using Microsoft.Extensions.Options;
@@ -32,23 +33,13 @@ namespace KinoDev.StorageService.WebApi.Services
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            return _messageBrokerService.SubscribeAsync(
-                    _messageBrokerSettings.Topics.OrderCompleted,
-                    _messageBrokerSettings.Queues.OrderCompleted,
-                    async (message) =>
-                    {
-                        var orderSummary = JsonSerializer.Deserialize<OrderSummary>(message);
-                        if (orderSummary != null)
-                        {
-                            await _fileService.GenerateAndUploadFileAsync(orderSummary, stoppingToken);
-
-                        }
-                        else
-                        {
-                            _logger.LogError("Failed to deserialize order summary from message: {Message}", message);
-                        }
-                    }
-                );
+            return _messageBrokerService.SubscribeAsync<OrderSummary>(
+                _messageBrokerSettings.Queues.OrderCompleted,
+                async (orderSummary) =>
+                {
+                    await _fileService.GenerateAndUploadFileAsync(orderSummary, stoppingToken);
+                }
+            );
         }
     }
 }
