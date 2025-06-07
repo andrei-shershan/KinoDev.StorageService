@@ -1,5 +1,6 @@
 using KinoDev.Shared.Models;
 using KinoDev.Shared.Services;
+using KinoDev.Shared.Services.Abstractions;
 using KinoDev.StorageService.WebApi.Models.Configurations;
 using KinoDev.StorageService.WebApi.Models.Services;
 using KinoDev.StorageService.WebApi.Services;
