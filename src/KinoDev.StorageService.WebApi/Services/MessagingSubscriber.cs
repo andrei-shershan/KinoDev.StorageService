@@ -37,6 +37,10 @@ namespace KinoDev.StorageService.WebApi.Services
                 _messageBrokerSettings.Queues.OrderCompleted,
                 async (orderSummary) =>
                 {
+                    _logger.LogInformation(
+                        "Received order summary for order ID {OrderId}",
+                        orderSummary.Id
+                    );
                     await _fileService.GenerateAndUploadFileAsync(orderSummary, stoppingToken);
                 }
             );

@@ -33,9 +33,10 @@ namespace KinoDev.StorageService.WebApi
             }
 
             var rabbitmqSettings = builder.Configuration.GetSection("RabbitMQ");
-            if (rabbitmqSettings == null)
+            var azureServiceBusSettings = builder.Configuration.GetSection("AzureServiceBus");
+            if (rabbitmqSettings == null && azureServiceBusSettings == null)
             {
-                throw new ArgumentNullException(nameof(rabbitmqSettings), "RabbitMQ settings not found in configuration.");
+                throw new ArgumentNullException(nameof(rabbitmqSettings), "RabbitMQ or AzureServiceBus settings must be provided in configuration.");
             }
 
             var dataSettings = builder.Configuration.GetSection("Data");
@@ -48,6 +49,7 @@ namespace KinoDev.StorageService.WebApi
             builder.Services.Configure<PdfServiceSettings>(pdfServiceSettings);
             builder.Services.Configure<MessageBrokerSettings>(messageBrokerSettings);
             builder.Services.Configure<RabbitMqSettings>(rabbitmqSettings);
+            builder.Services.Configure<AzureServiceBusSettings>(azureServiceBusSettings);
             builder.Services.Configure<DataSettings>(dataSettings);
 
             // Add services to the container.
@@ -61,7 +63,20 @@ namespace KinoDev.StorageService.WebApi
             builder.Services.AddTransient<IPdfService, PdfService>();
             builder.Services.AddTransient<IBlobStorageService, BlobStorageService>();
             builder.Services.AddTransient<IFileService, FileService>();
-            builder.Services.AddTransient<IMessageBrokerService, RabbitMQService>();
+
+            var messageBrokerName = builder.Configuration.GetValue<string>("MessageBrokerName");
+            if (messageBrokerName == "RabbitMQ")
+            {
+                builder.Services.AddSingleton<IMessageBrokerService, RabbitMQService>();
+            }
+            else if (messageBrokerName == "AzureServiceBus")
+            {
+                builder.Services.AddSingleton<IMessageBrokerService, AzureServiceBusService>();
+            }
+            else
+            {
+                throw new InvalidOperationException("Invalid MessageBrokerName configuration value.");
+            }
 
             builder.Services.AddHostedService<MessagingSubscriber>();
 
@@ -84,7 +99,7 @@ namespace KinoDev.StorageService.WebApi
             {
                 app.UseHttpsRedirection();
             }
-            
+
             app.UseAuthorization();
 
             app.MapControllers();
