@@ -42,4 +42,10 @@ public class FilesController : ControllerBase
         var fileRelativePath = await _fileService.UploadPublicFileAsync(fileData, request.FileName, _blobStorageSettings.ContainerNames.PublicImages);
         return Ok(fileRelativePath);
     }
+
+    [HttpGet("test")]
+    public IActionResult TestEndpoint()
+    {
+        return Ok("Test endpoint is working." + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+    }
 }
