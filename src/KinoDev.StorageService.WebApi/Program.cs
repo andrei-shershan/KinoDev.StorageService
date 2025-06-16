@@ -14,6 +14,9 @@ namespace KinoDev.StorageService.WebApi
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            // Add Application Insights telemetry collection
+            builder.Services.AddApplicationInsightsTelemetry();
+
             var blobStorageSettings = builder.Configuration.GetSection("BlobStorage");
             if (blobStorageSettings == null)
             {
@@ -44,7 +47,7 @@ namespace KinoDev.StorageService.WebApi
             {
                 throw new ArgumentNullException(nameof(dataSettings), "Data settings not found in configuration.");
             }
-
+            
             builder.Services.Configure<BlobStorageSettings>(blobStorageSettings);
             builder.Services.Configure<PdfServiceSettings>(pdfServiceSettings);
             builder.Services.Configure<MessageBrokerSettings>(messageBrokerSettings);

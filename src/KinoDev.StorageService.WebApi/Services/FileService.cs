@@ -48,6 +48,8 @@ namespace KinoDev.StorageService.WebApi.Models.Services
 
         public async Task GenerateAndUploadFileAsync(OrderSummary orderSummary, CancellationToken cancellationToken)
         {
+            _logger.LogInformation("Generating and uploading file for order {OrderId}", orderSummary.Id);
+
             var qrCode = _qrCodeService.GenerateQRCodeInBase64Async(_dataSettings.QRCodeLink);
 
             var html = GetHtml(orderSummary, qrCode);
@@ -57,8 +59,11 @@ namespace KinoDev.StorageService.WebApi.Models.Services
             var hash = HashHelper.CalculateSha256Hash(orderSummary.Id.ToString(), string.Empty);
             var fileName = $"{hash}.pdf";
 
+            _logger.LogInformation("Uploading file {FileName} for order {OrderId}", fileName, orderSummary.Id);
+
             var relativePath = await _blobStorageService.Upload(pdf, fileName, _blobStorageSettings.ContainerNames.Tickets, PublicAccessType.Blob);
 
+            _logger.LogInformation("File {FileName} uploaded successfully for order {OrderId}", fileName, orderSummary.Id);`
             orderSummary.FileUrl = relativePath;
 
             await _messageBrokerService.SendMessageAsync(
