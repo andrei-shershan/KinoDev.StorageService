@@ -63,7 +63,7 @@ namespace KinoDev.StorageService.WebApi.Models.Services
 
             var relativePath = await _blobStorageService.Upload(pdf, fileName, _blobStorageSettings.ContainerNames.Tickets, PublicAccessType.Blob);
 
-            _logger.LogInformation("File {FileName} uploaded successfully for order {OrderId}", fileName, orderSummary.Id);`
+            _logger.LogInformation("File {FileName} uploaded successfully for order {OrderId}", fileName, orderSummary.Id);
             orderSummary.FileUrl = relativePath;
 
             await _messageBrokerService.SendMessageAsync(
