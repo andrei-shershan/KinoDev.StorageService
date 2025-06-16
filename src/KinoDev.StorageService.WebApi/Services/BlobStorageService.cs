@@ -35,10 +35,17 @@ namespace KinoDev.StorageService.WebApi.Services
                 var uploadBlob = containerClient.GetBlobClient(fileName);
                 using (MemoryStream ms = new MemoryStream(bytes))
                 {
+                    _logger.LogInformation("Uploading file to Blob Storage. FileName: {FileName}, ContainerName: {ContainerName}", fileName, containerName);
                     await uploadBlob.UploadAsync(ms, overwrite: true);
                 }
 
                 // Return related path without account storage name
+                _logger.LogInformation("File uploaded successfully. FileName: {FileName}, ContainerName: {ContainerName}", fileName, containerName);
+                _logger.LogInformation("File URI: {FileUri}", uploadBlob.Uri.AbsolutePath);
+                var ifExist = await uploadBlob.ExistsAsync();
+                _logger.LogInformation("File exists: {IfExist}", ifExist);
+                var replaced = Regex.Replace(uploadBlob.Uri.AbsolutePath, @"^/[^/]+/", "");
+                _logger.LogInformation("Replaced path: {Replaced}", replaced);
                 return Regex.Replace(uploadBlob.Uri.AbsolutePath, @"^/[^/]+/", "");
             }
             catch (Exception ex)
