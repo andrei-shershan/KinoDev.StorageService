@@ -48,28 +48,41 @@ namespace KinoDev.StorageService.WebApi.Models.Services
 
         public async Task GenerateAndUploadFileAsync(OrderSummary orderSummary, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Generating and uploading file for order {OrderId}", orderSummary.Id);
+            try
+            {
+                _logger.LogInformation("Generating and uploading file for order {OrderId}", orderSummary.Id);
 
-            var qrCode = _qrCodeService.GenerateQRCodeInBase64Async(_dataSettings.QRCodeLink);
+                var qrCode = _qrCodeService.GenerateQRCodeInBase64Async(_dataSettings.QRCodeLink);
 
-            var html = GetHtml(orderSummary, qrCode);
+                var html = GetHtml(orderSummary, qrCode);
 
-            var pdf = await _pdfService.GeneratePdfAsync(html);
+                var pdf = await _pdfService.GeneratePdfAsync(html);
 
-            var hash = HashHelper.CalculateSha256Hash(orderSummary.Id.ToString(), string.Empty);
-            var fileName = $"{hash}.pdf";
+                var hash = HashHelper.CalculateSha256Hash(orderSummary.Id.ToString(), string.Empty);
+                var fileName = $"{orderSummary.Id.ToString()}.pdf";
 
-            _logger.LogInformation("Uploading file {FileName} for order {OrderId}", fileName, orderSummary.Id);
+                _logger.LogInformation("Uploading file {FileName} for order {OrderId}", fileName, orderSummary.Id);
 
-            var relativePath = await _blobStorageService.Upload(pdf, fileName, _blobStorageSettings.ContainerNames.Tickets, PublicAccessType.Blob);
+                _logger.LogInformation("*** pdf size: {PdfSize} bytes", pdf.Length);
+                _logger.LogInformation("*** file name: {FileName}, containerName: {container}", fileName, _blobStorageSettings.ContainerNames.Tickets);
 
-            _logger.LogInformation("File {FileName} uploaded successfully for order {OrderId}", fileName, orderSummary.Id);
-            orderSummary.FileUrl = relativePath;
+                var relativePath = await _blobStorageService.Upload(pdf, fileName, _blobStorageSettings.ContainerNames.Tickets, PublicAccessType.Blob);
 
-            await _messageBrokerService.SendMessageAsync(
-                _messageBrokerSettings.Queues.OrderFileCreated,
-                orderSummary
-            );           
+                _logger.LogInformation("File {FileName} uploaded to {RelativePath} for order {OrderId}", fileName, relativePath, orderSummary.Id);
+
+                _logger.LogInformation("File {FileName} uploaded successfully for order {OrderId}", fileName, orderSummary.Id);
+                orderSummary.FileUrl = relativePath;
+
+                await _messageBrokerService.SendMessageAsync(
+                    _messageBrokerSettings.Queues.OrderFileCreated,
+                    orderSummary
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating and uploading file for order {OrderId}", orderSummary.Id);
+                throw;
+            }    
         }
 
         public Task<string> UploadPublicFileAsync(byte[] bytes, string fileName, string containerName)
