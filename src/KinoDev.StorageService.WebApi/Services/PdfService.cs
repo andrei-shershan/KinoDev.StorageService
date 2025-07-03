@@ -3,6 +3,7 @@ using System.Text;
 using KinoDev.StorageService.WebApi.Models.Configurations;
 using KinoDev.StorageService.WebApi.Services.Abstractions;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 
 namespace KinoDev.StorageService.WebApi.Services
 {
@@ -11,14 +12,20 @@ namespace KinoDev.StorageService.WebApi.Services
         private readonly HttpClient _httpClient;
         private readonly PdfServiceSettings _pdfServiceSettings;
 
+        private readonly ILogger<PdfService> _logger;
+
         public PdfService(
             HttpClient httpClient,
-            IOptions<PdfServiceSettings> options
+            IOptions<PdfServiceSettings> options,
+            ILogger<PdfService> logger
         )
         {
             _pdfServiceSettings = options.Value;
 
+            _logger = logger;
+
             _httpClient = httpClient;
+            _httpClient.BaseAddress = new Uri(_pdfServiceSettings.BaseUrl);
             _httpClient.DefaultRequestHeaders.Add("Accept", "application/pdf");
         }
 
@@ -26,13 +33,12 @@ namespace KinoDev.StorageService.WebApi.Services
         {
             try
             {
-                using var form = new MultipartFormDataContent();
-                var stringContent = new StringContent(htmlContent, Encoding.UTF8, "text/html");
-                stringContent.Headers.ContentType = new MediaTypeHeaderValue("text/html");
+                var requestUri = "api/getpdf";
+                var requestContent = new StringContent(JsonConvert.SerializeObject(new { html = htmlContent }), Encoding.UTF8, "application/json");
 
-                form.Add(stringContent, "files", "index.html");
+                _logger.LogInformation("Sending request to PDF generation service at {RequestUri}", requestUri);
 
-                var response = await _httpClient.PostAsync($"{_pdfServiceSettings.BaseUrl}/forms/chromium/convert/html", form);
+                var response = await _httpClient.PostAsync(requestUri, requestContent);
                 if (response.IsSuccessStatusCode)
                 {
                     return await response.Content.ReadAsByteArrayAsync();

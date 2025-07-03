@@ -98,12 +98,6 @@ namespace KinoDev.StorageService.WebApi.Models.Services
                     </ul>
                     <br />
                     <img src=""data:image/png;base64,{qrCodeStringContent}"" alt=""QR Code"" width=""250"" />
-
-                    <br />
-                    <br />
-                    <small><em>* Do not share this ticket with anyone.</em></small>
-                    <br />
-                    <small><em>Share this githuib repo with your team :)</em></small>
                 </body>
                 </html>";
 
