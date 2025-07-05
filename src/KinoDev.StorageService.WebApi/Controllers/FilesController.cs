@@ -1,3 +1,4 @@
+using KinoDev.Shared.DtoModels.Orders;
 using KinoDev.StorageService.WebApi.Models.Configurations;
 using KinoDev.StorageService.WebApi.Models.RequestModels;
 using KinoDev.StorageService.WebApi.Services.Abstractions;
@@ -41,6 +42,14 @@ public class FilesController : ControllerBase
 
         var fileRelativePath = await _fileService.UploadPublicFileAsync(fileData, request.FileName, _blobStorageSettings.ContainerNames.PublicImages);
         return Ok(fileRelativePath);
+    }
+
+    [HttpPost("process-order-completed")]
+    public async Task<IActionResult> ProcessOrderCompletedAsync([FromBody] OrderSummary orderSummary)
+    {
+        await _fileService.GenerateAndUploadFileAsync(orderSummary, new CancellationToken());
+
+        return Ok();
     }
 
     [HttpGet("test")]
