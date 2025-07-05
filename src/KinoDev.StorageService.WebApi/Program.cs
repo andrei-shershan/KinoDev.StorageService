@@ -47,7 +47,7 @@ namespace KinoDev.StorageService.WebApi
             {
                 throw new ArgumentNullException(nameof(dataSettings), "Data settings not found in configuration.");
             }
-            
+
             builder.Services.Configure<BlobStorageSettings>(blobStorageSettings);
             builder.Services.Configure<PdfServiceSettings>(pdfServiceSettings);
             builder.Services.Configure<MessageBrokerSettings>(messageBrokerSettings);
@@ -81,7 +81,11 @@ namespace KinoDev.StorageService.WebApi
                 throw new InvalidOperationException("Invalid MessageBrokerName configuration value.");
             }
 
-            builder.Services.AddHostedService<MessagingSubscriber>();
+            var useFunctionBrokerSubscription = builder.Configuration.GetValue<bool>("UseFunctionBrokerSubscription");
+            if (!useFunctionBrokerSubscription)
+            {
+                builder.Services.AddHostedService<MessagingSubscriber>();
+            }
 
             // Register and configure HttpClient for PdfService
             builder.Services.AddHttpClient<PdfService>();
